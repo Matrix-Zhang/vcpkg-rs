@@ -60,14 +60,14 @@
 //! ```
 
 use std::ascii::AsciiExt;
+use std::collections::BTreeMap;
 use std::env;
 use std::error;
 use std::ffi::OsStr;
-use std::fs::{self, File};
 use std::fmt;
+use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::{PathBuf, Path};
-use std::collections::BTreeMap;
 
 // #[derive(Clone)]
 pub struct Config {
@@ -721,8 +721,15 @@ fn msvc_target() -> Result<MSVCTarget, Error> {
 #[cfg(test)]
 mod tests {
 
-    use std::env;
     use super::*;
+    use std::env;
+
+    #[test]
+    #[allow(non_snake_case)]
+    fn tests_set_environment_so_RUST_TEST_THREADS_must_be_set_to_1_in_environment() {
+        assert_eq!(env::var("RUST_TEST_THREADS"), Ok("1".to_string()));
+    }
+
 
     #[test]
     fn do_nothing_for_non_msvc_target() {
@@ -733,6 +740,7 @@ mod tests {
                 });
 
         env::set_var("TARGET", "x86_64-pc-windows-gnu");
+        assert_eq!(env::var("TARGET"), Ok("x86_64-pc-windows-gnu".to_string()));
         assert!(match ::probe_package("foo") {
                     Err(Error::NotMSVC) => true,
                     _ => false,
@@ -743,13 +751,74 @@ mod tests {
     #[test]
     fn do_nothing_for_bailout_variables_set() {
         env::set_var("TARGET", "x86_64-pc-windows-msvc");
-        assert!(match ::probe_package("foo") {
-                    Err(Error::NotMSVC) => true,
-                    _ => false,
-                });
-        println!("target is {} $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$",
-                 env::var("TARGET").unwrap());
-        assert!(false);
+
+        for &var in &["VCPKGRS_DISABLE",
+                      "VCPKGRS_NO_FOO",
+                      "FOO_NO_VCPKG",
+                      "NO_VCPKG"] {
+            env::set_var(var, "1");
+            println!("{:?}", ::probe_package("foo"));
+            assert!(match ::probe_package("foo") {
+                        Err(Error::DisabledByEnv(ref v)) if v == var => true,
+                        _ => false,
+                    });
+            env::remove_var(var);
+        }
         env::remove_var("TARGET");
     }
+
+    #[test]
+    fn default_build_refuses_dynamic() {
+
+        env::set_var("TARGET", "x86_64-pc-windows-msvc");
+        assert!(match ::probe_package("foo") {
+                    Err(Error::RequiredEnvMissing(ref v)) if v == "VCPKGRS_DYNAMIC" => true,
+                    //                    Err(Error::RequiredEnvMissing(_)) => true,
+                    _ => false,
+                });
+        env::remove_var("TARGET");
+    }
+
+    #[test]
+    fn dynamic_build_works_but_cant_find_lib() {
+        // this is a garbage test - "check it gets past x but fails at y"
+        env::set_var("TARGET", "x86_64-pc-windows-msvc");
+        env::set_var("VCPKGRS_DYNAMIC", "1");
+        assert!(match ::probe_package("foo") {
+                    Err(Error::LibNotFound(_)) => true,
+                    _ => false,
+                });
+        env::remove_var("VCPKGRS_DYNAMIC");
+        env::remove_var("TARGET");
+    }
+
+    #[test]
+    fn static_build_works_but_cant_find_lib() {
+        env::set_var("TARGET", "x86_64-pc-windows-msvc");
+        // CARGO_CFG_TARGET_FEATURE is set in response to
+        // RUSTFLAGS=-Ctarget-feature=+crt-static. It would
+        //  be nice to test that also.
+        env::set_var("CARGO_CFG_TARGET_FEATURE", "crt-static");
+        assert!(match ::probe_package("foo") {
+                    Err(Error::LibNotFound(_)) => true,
+                    _ => false,
+                });
+        env::remove_var("CARGO_CFG_TARGET_FEATURE");
+        env::remove_var("TARGET");
+    }
+
+    // #[test]
+    // fn do_nothing_for_bailout_variables_set() {
+    //     env::set_var("TARGET", "x86_64-pc-windows-msvc");
+    //     env::set_var("TARGET", "x86_64-pc-windows-msvc");
+    //     println!("{:?}", ::probe_package("foo"));
+    //     assert!(match ::probe_package("foo") {
+    //                 Err(Error::LibNotFound(_)) => true,
+    //                 _ => false,
+    //             });
+    //     assert!(false);
+    //     env::remove_var("TARGET");
+    // }
+
+
 }
