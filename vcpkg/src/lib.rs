@@ -269,7 +269,7 @@ fn find_vcpkg_target(msvc_target: &MSVCTarget) -> Result<VcpkgTarget, Error> {
     try!(validate_vcpkg_root(&vcpkg_root));
 
     let static_lib = env::var("CARGO_CFG_TARGET_FEATURE")
-        .unwrap_or_default()
+        .unwrap_or(String::new()) // rustc 1.10
         .contains("crt-static");
 
     let mut base = vcpkg_root;
@@ -709,7 +709,7 @@ fn envify(name: &str) -> String {
 }
 
 fn msvc_target() -> Result<MSVCTarget, Error> {
-    let target = env::var("TARGET").unwrap_or_default();
+    let target = env::var("TARGET").unwrap_or(String::new());
     if !target.contains("-pc-windows-msvc") {
         Err(Error::NotMSVC)
     } else if target.starts_with("x86_64-") {
