@@ -59,6 +59,9 @@
 //!         cargo:rustc-link-lib=static=mysqlclient
 //! ```
 
+// Option::unwrap_or_default() is not available in Rust 1.10
+#![allow(or_fun_call)]
+
 use std::ascii::AsciiExt;
 use std::collections::BTreeMap;
 use std::env;
