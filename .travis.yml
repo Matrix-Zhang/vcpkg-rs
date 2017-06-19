@@ -4,7 +4,6 @@ rust:
   - beta
   - nightly
   - 1.10.0
-  - 1.0.0
 script:
   - export RUST_BACKTRACE=1
   - export RUST_TEST_THREADS=1
