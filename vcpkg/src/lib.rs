@@ -69,7 +69,7 @@ use std::fs::{self, File};
 use std::io::{BufRead, BufReader};
 use std::path::{PathBuf, Path};
 
-// #[derive(Clone)]
+#[derive(Default)]
 pub struct Config {
     /// should the cargo metadata actually be emitted
     cargo_metadata: bool,
@@ -229,7 +229,7 @@ fn find_vcpkg_root() -> Result<PathBuf, Error> {
         split.next(); // eat anything before Project="
         if let Some(found) = split.next() {
             // " is illegal in a Windows pathname
-            if let Some(found) = found.split_terminator("\"").next() {
+            if let Some(found) = found.split_terminator('"').next() {
                 let mut vcpkg_root = PathBuf::from(found);
                 if !(vcpkg_root.pop() && vcpkg_root.pop() && vcpkg_root.pop() && vcpkg_root.pop()) {
                     return Err(Error::VcpkgNotFound(format!("Could not find vcpkg root above {}",
@@ -269,7 +269,7 @@ fn find_vcpkg_target(msvc_target: &MSVCTarget) -> Result<VcpkgTarget, Error> {
     try!(validate_vcpkg_root(&vcpkg_root));
 
     let static_lib = env::var("CARGO_CFG_TARGET_FEATURE")
-        .unwrap_or(String::new())
+        .unwrap_or_default()
         .contains("crt-static");
 
     let mut base = vcpkg_root;
@@ -308,9 +308,9 @@ struct Port {
 }
 
 fn load_port_manifest(path: &PathBuf,
-                      port: &String,
-                      version: &String,
-                      vcpkg_triple: &String)
+                      port: &str,
+                      version: &str,
+                      vcpkg_triple: &str)
                       -> Result<(Vec<String>, Vec<String>), Error> {
     let manifest_file = path.join("info")
         .join(format!("{}_{}_{}.list", port, version, vcpkg_triple));
@@ -334,17 +334,18 @@ fn load_port_manifest(path: &PathBuf,
         let file_path = Path::new(&line);
 
         if let Ok(dll) = file_path.strip_prefix(&dll_prefix) {
-            if dll.extension() == Some(OsStr::new("dll")) {
+            if dll.extension() == Some(OsStr::new("dll")) &&
+               dll.components().collect::<Vec<_>>().len() == 1 {
                 // match "mylib.dll" but not "debug/mylib.dll" or "manual_link/mylib.dll"
-                if dll.components().collect::<Vec<_>>().len() == 1 {
-                    dll.to_str().map(|s| dlls.push(s.to_owned()));
-                }
+
+                dll.to_str().map(|s| dlls.push(s.to_owned()));
+
             }
         } else if let Ok(lib) = file_path.strip_prefix(&lib_prefix) {
-            if lib.extension() == Some(OsStr::new("lib")) {
-                if lib.components().collect::<Vec<_>>().len() == 1 {
-                    lib.to_str().map(|s| libs.push(s.to_owned()));
-                }
+            if lib.extension() == Some(OsStr::new("lib")) &&
+               lib.components().collect::<Vec<_>>().len() == 1 {
+                lib.to_str().map(|s| libs.push(s.to_owned()));
+
             }
         }
     }
@@ -391,15 +392,15 @@ fn load_ports(target: &VcpkgTarget) -> Result<BTreeMap<String, Port>, Error> {
                         };
 
                         // hmmm
-                        let version = current.get("Version").unwrap();
+                        let version = &current["Version"];
 
                         if current
                                .get("Status")
                                .unwrap_or(&String::new())
                                .ends_with(" installed") {
                             let lib_info = try!(load_port_manifest(&target.status_path,
-                                                                   &name,
-                                                                   &version,
+                                                                   name,
+                                                                   version,
                                                                    &target.vcpkg_triple));
                             let port = Port {
                                 dlls: lib_info.0,
@@ -441,9 +442,10 @@ impl Config {
     pub fn new() -> Config {
         Config {
             cargo_metadata: true,
-            emit_includes: false,
-            required_libs: Vec::new(),
             copy_dlls: true,
+            ..Default::default()
+            // emit_includes: false,
+            // required_libs: Vec::new(),
         }
     }
 
@@ -575,7 +577,7 @@ impl Config {
             // this path is dropped by recent versions of cargo hence the copies to OUT_DIR below
             lib.dll_paths.push(vcpkg_target.bin_path.clone());
         }
-        drop(port_name);
+
         for required_lib in &self.required_libs {
             if vcpkg_target.is_static {
                 lib.cargo_metadata
@@ -707,7 +709,7 @@ fn envify(name: &str) -> String {
 }
 
 fn msvc_target() -> Result<MSVCTarget, Error> {
-    let target = env::var("TARGET").unwrap_or(String::new());
+    let target = env::var("TARGET").unwrap_or_default();
     if !target.contains("-pc-windows-msvc") {
         Err(Error::NotMSVC)
     } else if target.starts_with("x86_64-") {
