@@ -1,5 +1,7 @@
 .job_template: &job_definition
-    script:
+  tags:
+    - win64
+  script:
     - rustup override set %RUST%
     - rustc --version && cargo --version
     - set VCPKG_ROOT=~%dp0\vcpkg
