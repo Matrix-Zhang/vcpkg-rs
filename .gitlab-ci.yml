@@ -5,6 +5,7 @@
     - rustup override set %RUST%
     - rustc --version && cargo --version
     - set VCPKG_ROOT=~%dp0\vcp
+    - echo VCPKG_ROOT is %VCPKG_ROOT%
     - if not exist vcp git clone https://github.com/Microsoft/vcpkg vcp
     - cd vcp
     - cd
