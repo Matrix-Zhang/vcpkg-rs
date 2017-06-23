@@ -5,6 +5,7 @@
     - rustup override set %RUST%
     - rustc --version && cargo --version
     - set VCPKG_ROOT=~%dp0\vcpkg
+    - rd /s /q vcpkg
     - if not exist vcpkg git clone https://github.com/Microsoft/vcpkg
     - if not exist vcpkg\vcpkg.exe call vcpkg\bootstrap.bat
     - '"%VCPKG_ROOT%\vcpkg.exe" install sqlite3 libpq libmysql curl zeromq'
