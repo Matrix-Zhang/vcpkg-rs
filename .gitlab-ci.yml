@@ -7,6 +7,7 @@
     - set VCPKG_ROOT=~%dp0\vcp
     - if not exist vcp git clone https://github.com/Microsoft/vcpkg vcp
     - cd vcp
+    - git checkout master
     - git pull
     - cd ..
     - if not exist vcp\vcpkg.exe call vcp\bootstrap-vcpkg.bat
