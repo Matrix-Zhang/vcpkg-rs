@@ -1,0 +1,51 @@
+variables:
+    VCPKG_PANIC: 1
+
+.job_template: &job_definition
+  script:
+  - rustup override set %RUST%
+  - rustc --version && cargo --version
+  - set VCPKG_ROOT=~%dp0\vcpkg
+  - if not exists vcpkg git clone https://github.com/Microsoft/vcpkg
+  - if not exists vcpkg\vcpkg.exe call vcpkg\bootstrap.bat
+  - '%VCPKG_ROOT%\vcpkg.exe' install sqlite3 libpq libmysql curl zeromq 
+  - rustc --version
+  - cargo --version
+  - set RUST_BACKTRACE=1
+  - set RUST_TEST_THREADS=1
+  - cargo build --all
+  - cargo test --all
+  - cargo run --manifest-path vcpkg_cli\Cargo.toml -- probe sqlite3
+  - cargo run --manifest-path systest\Cargo.toml 
+
+win64_dynamic:
+  <<: *job_definition
+  variables:
+    TARGET: x86_64-pc-windows-msvc
+    VCPKGRS_DYNAMIC: 1
+    RUST: stable
+    VCPKG_DEFAULT_TRIPLET: x64-windows
+
+win64_static:
+  <<: *job_definition
+  variables:
+    TARGET: x86_64-pc-windows-msvc
+    RUSTFLAGS: -Ctarget-feature=+crt-static
+    RUST: nightly
+    VCPKG_DEFAULT_TRIPLET: x64-windows-static
+
+win32_dynamic:
+  <<: *job_definition
+  variables:
+    TARGET: i686-pc-windows-msvc
+    VCPKGRS_DYNAMIC: 1
+    RUST: stable
+    VCPKG_DEFAULT_TRIPLET: x86-windows
+
+win32_static:
+  <<: *job_definition
+  variables:
+    TARGET: i686-pc-windows-msvc
+    RUSTFLAGS: -Ctarget-feature=+crt-static
+    RUST: nightly
+    VCPKG_DEFAULT_TRIPLET: x86-windows-static
