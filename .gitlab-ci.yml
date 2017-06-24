@@ -12,7 +12,7 @@
     - cd
     - git checkout master
     - git pull
-    - cd ..\vcpkg
+    - cd ..\vcpkg-rs
     - cd
     - if not exist ..\vcp\vcpkg.exe call ..\vcp\bootstrap-vcpkg.bat
     - '"%VCPKG_ROOT%\vcpkg.exe" install sqlite3 libpq libmysql curl zeromq'
