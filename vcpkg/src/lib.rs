@@ -578,7 +578,7 @@ impl Config {
         try!(self.emit_libs(&mut lib, &vcpkg_target));
 
         if self.copy_dlls {
-            try!(self.do_dll_copy(&mut lib, &vcpkg_target));
+            try!(self.do_dll_copy(&mut lib));
         }
 
         if self.cargo_metadata {
@@ -625,7 +625,7 @@ impl Config {
         Ok(())
     }
 
-    fn do_dll_copy(&mut self, lib: &mut Library, vcpkg_target: &VcpkgTarget) -> Result<(), Error> {
+    fn do_dll_copy(&mut self, lib: &mut Library) -> Result<(), Error> {
         if let Some(target_dir) = env::var_os("OUT_DIR") {
                 if !lib.found_dlls.is_empty() {
                     for file in &lib.found_dlls {
@@ -765,7 +765,7 @@ impl Config {
         try!(self.emit_libs(&mut lib, &vcpkg_target));
 
         if self.copy_dlls {
-            try!(self.do_dll_copy(&mut lib, &vcpkg_target));
+            try!(self.do_dll_copy(&mut lib));
         }
 
         if self.cargo_metadata {
