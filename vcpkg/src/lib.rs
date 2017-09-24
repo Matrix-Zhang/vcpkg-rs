@@ -953,17 +953,4 @@ mod tests {
     //     assert!(false);
     //     env::remove_var("TARGET");
     // }
-
-    #[test]
-    fn file_stem() {
-        assert_eq!(
-            "gio-2.0",
-            Path::new("gio-2.0.lib")
-                .file_stem()
-                .unwrap()
-                .to_string_lossy()
-                .to_owned()
-        );
-    }
-
 }
