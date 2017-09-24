@@ -384,15 +384,15 @@ fn load_ports(target: &VcpkgTarget) -> Result<BTreeMap<String, Port>, Error> {
         let line = line.unwrap();
         let parts = line.splitn(2, ": ").clone().collect::<Vec<_>>();
         if parts.len() == 2 {
-            println!("{}: {}", parts[0], parts[1]);
+//            println!("{}: {}", parts[0], parts[1]);
             current.insert(parts[0].trim().into(), parts[1].trim().into());
         } else if parts.len() == 1 {
             if let Some(name) = current.get("Package") {
                 if let Some(arch) = current.get("Architecture") {
                     if *arch == target.vcpkg_triple {
-                        println!("-++++++-");
-                        println!("{:?}", current);
-                        println!("--------");
+                        // println!("-++++++-");
+                        // println!("{:?}", current);
+                        // println!("--------");
 
                         let deps = if let Some(deps) = current.get("Depends") {
                             deps.split(", ").map(|x| x.to_owned()).collect()
@@ -670,6 +670,10 @@ impl Config {
     }
 
     pub fn probe(&mut self, port_name: &str) -> Result<Library, Error> {
+        // determine the target type, bailing out if it is not some
+        // kind of msvc
+        let msvc_target = try!(msvc_target());
+
         // bail out if requested to not try at all
         if env::var_os("VCPKGRS_DISABLE").is_some() {
             return Err(Error::DisabledByEnv("VCPKGRS_DISABLE".to_owned()));
@@ -692,11 +696,12 @@ impl Config {
             return Err(Error::DisabledByEnv(abort_var_name));
         }
 
-        // determine the target type, bailing out if it is not some
-        // kind of msvc
-        let msvc_target = try!(msvc_target());
         let vcpkg_target = try!(find_vcpkg_target(&msvc_target));
         let ports = try!(load_ports(&vcpkg_target));
+
+        if ports.get(&port_name.to_owned()).is_none() {
+            return Err(Error::LibNotFound(port_name.to_owned()));
+        }
 
         // the complete set of ports required
         let mut required_ports: BTreeMap<String, Port> = BTreeMap::new();
