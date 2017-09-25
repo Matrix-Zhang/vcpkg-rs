@@ -1,4 +1,4 @@
-asdfasdf.job_template: &job_definition
+.job_template: &job_definition
   tags:
     - win64
   script:
