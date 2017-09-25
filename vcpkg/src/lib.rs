@@ -210,9 +210,7 @@ fn find_vcpkg_root() -> Result<PathBuf, Error> {
     // see if there is a per-user vcpkg tree that has been integrated into msbuild
     // using `vcpkg integrate install`
     let local_app_data = try!(env::var("LOCALAPPDATA").map_err(|_| {
-        Error::VcpkgNotFound(
-            "Failed to read LOCALAPPDATA environment variable".to_string(),
-        )
+        Error::VcpkgNotFound("Failed to read LOCALAPPDATA environment variable".to_string())
     })); // not present or can't utf8
     let vcpkg_user_targets_path = Path::new(local_app_data.as_str())
         .join("vcpkg")
@@ -343,16 +341,16 @@ fn load_port_manifest(
         let file_path = Path::new(&line);
 
         if let Ok(dll) = file_path.strip_prefix(&dll_prefix) {
-            if dll.extension() == Some(OsStr::new("dll")) &&
-                dll.components().collect::<Vec<_>>().len() == 1
+            if dll.extension() == Some(OsStr::new("dll"))
+                && dll.components().collect::<Vec<_>>().len() == 1
             {
                 // match "mylib.dll" but not "debug/mylib.dll" or "manual_link/mylib.dll"
 
                 dll.to_str().map(|s| dlls.push(s.to_owned()));
             }
         } else if let Ok(lib) = file_path.strip_prefix(&lib_prefix) {
-            if lib.extension() == Some(OsStr::new("lib")) &&
-                lib.components().collect::<Vec<_>>().len() == 1
+            if lib.extension() == Some(OsStr::new("lib"))
+                && lib.components().collect::<Vec<_>>().len() == 1
             {
                 lib.to_str().map(|s| libs.push(s.to_owned()));
             }
@@ -384,7 +382,7 @@ fn load_ports(target: &VcpkgTarget) -> Result<BTreeMap<String, Port>, Error> {
         let line = line.unwrap();
         let parts = line.splitn(2, ": ").clone().collect::<Vec<_>>();
         if parts.len() == 2 {
-//            println!("{}: {}", parts[0], parts[1]);
+            //            println!("{}: {}", parts[0], parts[1]);
             current.insert(parts[0].trim().into(), parts[1].trim().into());
         } else if parts.len() == 1 {
             if let Some(name) = current.get("Package") {
@@ -604,7 +602,7 @@ impl Config {
                 lib.cargo_metadata
                     // BUG: this used to use static= which worked but now does not.
                     // I tried against 1.19.0 and nightly-2017-06-24 and neither of them
-                    // worked where they must have in the past. Seems like it's not a 
+                    // worked where they must have in the past. Seems like it's not a
                     // rustc/cargo issue.
                     .push(format!("cargo:rustc-link-lib={}", required_lib));
             } else {
@@ -701,69 +699,71 @@ impl Config {
         }
 
         let vcpkg_target = try!(find_vcpkg_target(&msvc_target));
-        let ports = try!(load_ports(&vcpkg_target));
-
-        if ports.get(&port_name.to_owned()).is_none() {
-            return Err(Error::LibNotFound(port_name.to_owned()));
-        }
-
-        // the complete set of ports required
-        let mut required_ports: BTreeMap<String, Port> = BTreeMap::new();
-
-        // working of ports that we need to include
-        //        let mut ports_to_scan: BTreeSet<String> = BTreeSet::new();
-        //        ports_to_scan.insert(port_name.to_owned());
-        let mut ports_to_scan = vec![port_name.to_owned()]; //: Vec<String> = BTreeSet::new();
-
-        while !ports_to_scan.is_empty() {
-            let port_name = ports_to_scan.pop().unwrap();
-
-            if required_ports.contains_key(&port_name) {
-                continue;
-            }
-
-            if let Some(port) = ports.get(&port_name) {
-                for dep in &port.deps {
-                    ports_to_scan.push(dep.clone());
-                }
-                required_ports.insert(port_name, (*port).clone());
-            } else {
-                // what?
-            }
-        }
-
-        // for port in ports {
-        //     println!("port {:?}", port);
-        // }
-        // println!("=============================");
-        for port in &required_ports {
-            println!("required port {:?}", port);
-        }
 
         // if no overrides have been selected, then the Vcpkg port name
         // is the the .lib name and the .dll name
         if self.required_libs.is_empty() {
-            for (_, port) in &required_ports {
-                self.required_libs.extend(port.libs.iter().map(|s| {
-                    Path::new(&s)
-                        .file_stem()
-                        .unwrap()
-                        .to_string_lossy()
-                        .into_owned()
-                }));
-                self.required_dlls
-                    .extend(port.dlls.iter().cloned().map(|s| {
+            let ports = try!(load_ports(&vcpkg_target));
+
+            if ports.get(&port_name.to_owned()).is_none() {
+                return Err(Error::LibNotFound(port_name.to_owned()));
+            }
+
+            // the complete set of ports required
+            let mut required_ports: BTreeMap<String, Port> = BTreeMap::new();
+
+            // working of ports that we need to include
+            //        let mut ports_to_scan: BTreeSet<String> = BTreeSet::new();
+            //        ports_to_scan.insert(port_name.to_owned());
+            let mut ports_to_scan = vec![port_name.to_owned()]; //: Vec<String> = BTreeSet::new();
+
+            while !ports_to_scan.is_empty() {
+                let port_name = ports_to_scan.pop().unwrap();
+
+                if required_ports.contains_key(&port_name) {
+                    continue;
+                }
+
+                if let Some(port) = ports.get(&port_name) {
+                    for dep in &port.deps {
+                        ports_to_scan.push(dep.clone());
+                    }
+                    required_ports.insert(port_name, (*port).clone());
+                } else {
+                    // what?
+                }
+            }
+
+            // for port in ports {
+            //     println!("port {:?}", port);
+            // }
+            // println!("=============================");
+            for port in &required_ports {
+                println!("required port {:?}", port);
+            }
+
+            // if no overrides have been selected, then the Vcpkg port name
+            // is the the .lib name and the .dll name
+            if self.required_libs.is_empty() {
+                for (_, port) in &required_ports {
+                    self.required_libs.extend(port.libs.iter().map(|s| {
                         Path::new(&s)
                             .file_stem()
                             .unwrap()
                             .to_string_lossy()
                             .into_owned()
                     }));
+                    self.required_dlls
+                        .extend(port.dlls.iter().cloned().map(|s| {
+                            Path::new(&s)
+                                .file_stem()
+                                .unwrap()
+                                .to_string_lossy()
+                                .into_owned()
+                        }));
+                }
             }
         }
-
-        let vcpkg_target = try!(find_vcpkg_target(&msvc_target));
-
         // require explicit opt-in before using dynamically linked
         // variants, otherwise cargo install of various things will
         // stop working if Vcpkg is installed.
