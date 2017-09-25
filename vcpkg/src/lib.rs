@@ -602,7 +602,11 @@ impl Config {
         for required_lib in &self.required_libs {
             if vcpkg_target.is_static {
                 lib.cargo_metadata
-                    .push(format!("cargo:rustc-link-lib=static={}", required_lib));
+                    // BUG: this used to use static= which worked but now does not.
+                    // I tried against 1.19.0 and nightly-2017-06-24 and neither of them
+                    // worked where they must have in the past. Seems like it's not a 
+                    // rustc/cargo issue.
+                    .push(format!("cargo:rustc-link-lib={}", required_lib));
             } else {
                 lib.cargo_metadata
                     .push(format!("cargo:rustc-link-lib={}", required_lib));
