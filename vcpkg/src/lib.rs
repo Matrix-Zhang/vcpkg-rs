@@ -598,17 +598,9 @@ impl Config {
 
     fn emit_libs(&mut self, lib: &mut Library, vcpkg_target: &VcpkgTarget) -> Result<(), Error> {
         for required_lib in &self.required_libs {
-            if vcpkg_target.is_static {
-                lib.cargo_metadata
-                    // BUG: this used to use static= which worked but now does not.
-                    // I tried against 1.19.0 and nightly-2017-06-24 and neither of them
-                    // worked where they must have in the past. Seems like it's not a
-                    // rustc/cargo issue.
-                    .push(format!("cargo:rustc-link-lib={}", required_lib));
-            } else {
-                lib.cargo_metadata
-                    .push(format!("cargo:rustc-link-lib={}", required_lib));
-            }
+            // this could use static-nobundle= for static libraries but it is apparently
+            // not necessary to make the distinction for windows-msvc.
+            lib.cargo_metadata.push(format!("cargo:rustc-link-lib={}", required_lib));
 
             // verify that the library exists
             let mut lib_location = vcpkg_target.lib_path.clone();
