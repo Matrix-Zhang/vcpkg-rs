@@ -56,7 +56,7 @@
 //!         C:\src\diesel_build\vcpkg-dll\installed\x64-windows-static\lib
 //! Cargo metadata:
 //!         cargo:rustc-link-search=native=C:\src\[..]\x64-windows-static\lib
-//!         cargo:rustc-link-lib=static=mysqlclient
+//!         cargo:rustc-link-lib=mysqlclient
 //! ```
 
 // Option::unwrap_or_default() is not available in Rust 1.10
