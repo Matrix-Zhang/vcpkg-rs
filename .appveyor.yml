@@ -26,6 +26,7 @@ install:
   - cargo -V
   - git clone https://github.com/Microsoft/vcpkg c:\projects\vcpkg
   - git --git-dir=c:\projects\vcpkg\.git log -1 --format=oneline
+  - git --git-dir=c:\projects\vcpkg\.git revert 0ccea4f3677d92a
   - c:\projects\vcpkg\bootstrap-vcpkg.bat
   - set VCPKG_ROOT=c:\projects\vcpkg
   - echo yes > %VCPKG_ROOT%\Downloads\AlwaysAllowDownloads
