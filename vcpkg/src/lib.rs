@@ -364,10 +364,10 @@ fn load_ports(target: &VcpkgTarget) -> Result<BTreeMap<String, Port>, Error> {
     let mut ports = BTreeMap::new();
 
     let status_filename = target.status_path.join("status");
-    let f = try!(File::open(&status_filename).map_err(|_| {
+    let f = try!(File::open(&status_filename).map_err(|e| {
         Error::VcpkgInstallation(format!(
-            "Could not open status file at {}",
-            status_filename.display()
+            "Could not open status file at {}: {}",
+            status_filename.display(), e
         ))
     }));
     let file = BufReader::new(&f);
