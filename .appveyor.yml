@@ -25,8 +25,13 @@ install:
   - rustc -V
   - cargo -V
   - git clone https://github.com/Microsoft/vcpkg c:\projects\vcpkg
-  - git --git-dir=c:\projects\vcpkg\.git log -1 --format=oneline
-  - git --git-dir=c:\projects\vcpkg\.git checkout -f eb0591597e4cb9
+  - pwd
+  - pushd c:\projects\vcpkg
+  - git log -1 --format=oneline
+  - git checkout -f eacabe5c4641c2f95507a4c513fa35552937f6ab
+  - pwd
+  - popd
+  - pwd
   - c:\projects\vcpkg\bootstrap-vcpkg.bat
   - set VCPKG_ROOT=c:\projects\vcpkg
   - echo yes > %VCPKG_ROOT%\Downloads\AlwaysAllowDownloads
