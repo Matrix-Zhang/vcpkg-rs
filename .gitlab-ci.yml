@@ -12,6 +12,7 @@
     - cd
     - git checkout master
     - git pull
+    - git log -1 --format=oneline
     - cd ..\vcpkg-rs
     - cd
     - call ..\vcp\bootstrap-vcpkg.bat
