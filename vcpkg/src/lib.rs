@@ -62,7 +62,6 @@
 // Option::unwrap_or_default() is not available in Rust 1.10
 //#![allow(or_fun_call)]
 
-use std::ascii::AsciiExt;
 use std::collections::BTreeMap;
 use std::env;
 use std::error;
@@ -367,7 +366,8 @@ fn load_ports(target: &VcpkgTarget) -> Result<BTreeMap<String, Port>, Error> {
     let f = try!(File::open(&status_filename).map_err(|e| {
         Error::VcpkgInstallation(format!(
             "Could not open status file at {}: {}",
-            status_filename.display(), e
+            status_filename.display(),
+            e
         ))
     }));
     let file = BufReader::new(&f);
@@ -509,7 +509,7 @@ impl Config {
     ///
     /// This will use all configuration previously set to select the
     /// architecture and linkage.
-    pub fn probe_old(&mut self, port_name: &str) -> Result<Library, Error> {
+    pub fn probe(&mut self, port_name: &str) -> Result<Library, Error> {
         // determine the target type, bailing out if it is not some
         // kind of msvc
         let msvc_target = try!(msvc_target());
@@ -600,7 +600,8 @@ impl Config {
         for required_lib in &self.required_libs {
             // this could use static-nobundle= for static libraries but it is apparently
             // not necessary to make the distinction for windows-msvc.
-            lib.cargo_metadata.push(format!("cargo:rustc-link-lib={}", required_lib));
+            lib.cargo_metadata
+                .push(format!("cargo:rustc-link-lib={}", required_lib));
 
             // verify that the library exists
             let mut lib_location = vcpkg_target.lib_path.clone();
@@ -663,7 +664,7 @@ impl Config {
         Ok(())
     }
 
-    pub fn probe(&mut self, port_name: &str) -> Result<Library, Error> {
+    pub fn probe2(&mut self, port_name: &str) -> Result<Library, Error> {
         // determine the target type, bailing out if it is not some
         // kind of msvc
         let msvc_target = try!(msvc_target());
@@ -730,9 +731,9 @@ impl Config {
             //     println!("port {:?}", port);
             // }
             // println!("=============================");
-            for port in &required_ports {
-                println!("required port {:?}", port);
-            }
+            //for port in &required_ports {
+            //   println!("required port {:?}", port);
+            //}
 
             // if no overrides have been selected, then the Vcpkg port name
             // is the the .lib name and the .dll name
