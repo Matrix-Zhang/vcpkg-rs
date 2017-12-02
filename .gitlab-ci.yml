@@ -9,6 +9,7 @@
     - cd ..
     - if not exist vcp git clone https://github.com/Microsoft/vcpkg vcp
     - cd vcp
+    - del /q downloads\*
     - cd
     - git checkout master
     - git pull
@@ -24,10 +25,10 @@
     - set RUST_TEST_THREADS=1
     - cargo update
     - cargo clean
-    - cargo build --all
-    - cargo test --all
+    - cargo build --all --features="extras"
+    - cargo test --all --features="extras"
     - cargo run --manifest-path vcpkg_cli\Cargo.toml -- probe sqlite3
-    - cargo run --manifest-path systest\Cargo.toml 
+    - cargo run --features="extras" --manifest-path systest\Cargo.toml 
 
 win64_dynamic:
   <<: *job_definition
