@@ -1,5 +1,9 @@
 [workspace]
-members = [ "vcpkg", "vcpkg_cli", "systest" ]
+members = [ "vcpkg", "vcpkg_cli" ]
+exclude = [ "systest", "tests" ]
 
-[replace]
-"vcpkg:0.2.2" = { path = "vcpkg" }
+# [patch.crates-io]
+# vcpkg = { path = 'vcpkg' }
+
+# [patch.'https://github.com/mcgoo/vcpkg-rs']
+# vcpkg = { path = 'vcpkg' }
